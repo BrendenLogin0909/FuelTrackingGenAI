@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { validateImageFile } from "@/lib/validation";
 
 interface PhotoCaptureProps {
@@ -12,6 +12,13 @@ export function PhotoCapture({ onImagesSelected, onError }: PhotoCaptureProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [stream, setStream] = useState<MediaStream | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
+
+  // Effect to attach stream to video element after render
+  useEffect(() => {
+    if (stream && videoRef.current) {
+      videoRef.current.srcObject = stream;
+    }
+  }, [stream]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -33,9 +40,7 @@ export function PhotoCapture({ onImagesSelected, onError }: PhotoCaptureProps) {
         video: { facingMode: "environment" },
       });
       setStream(mediaStream);
-      if (videoRef.current) {
-        videoRef.current.srcObject = mediaStream;
-      }
+      // srcObject is now assigned via useEffect after the video element renders
     } catch (err) {
       onError?.("Camera access denied or unavailable");
     }
