@@ -149,7 +149,7 @@ export function parseOcrText(text: string): ExtractedFields {
   ];
   const odoCandidates: number[] = [];
   for (const pattern of odometerPatterns) {
-    const matches = normalized.matchAll(new RegExp(pattern.source, "gi"));
+    const matches = Array.from(normalized.matchAll(new RegExp(pattern.source, "gi")));
     for (const m of matches) {
       const raw = m[1].replace(/,/g, "");
       const n = Math.floor(parseFloat(raw));
