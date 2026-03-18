@@ -241,12 +241,51 @@ export function PhotoCapture({ onImagesSelected, onError }: PhotoCaptureProps) {
               </div>
             ))}
           </div>
-          <div className="flex flex-col gap-2 pt-2 sm:flex-row">
+          <div className="flex flex-col gap-2 pt-2 sm:flex-row sm:items-center">
+            <button
+              type="button"
+              onClick={() => setDraftImages([])}
+              className="inline-flex items-center justify-center gap-2 rounded-lg border border-border px-4 py-3 font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+            >
+              Start over
+            </button>
+            {(() => {
+              const hasOdometer = draftImages.some((image) => image.role === "odometer");
+              return (
+                <button
+                  type="button"
+                  onClick={() => startCamera(draftImages.some((image) => image.role === "receipt") ? "odometer" : "receipt")}
+                  className={`inline-flex items-center justify-center gap-2 rounded-lg border px-4 py-3 font-medium transition-colors ${
+                    !hasOdometer
+                      ? "border-primary bg-primary text-primary-foreground hover:bg-primary/90"
+                      : "border-border text-foreground hover:bg-secondary"
+                  }`}
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" />
+                    <circle cx="12" cy="13" r="3" />
+                  </svg>
+                  {draftImages.some((image) => image.role === "receipt")
+                    ? "Capture odometer"
+                    : "Capture receipt"}
+                </button>
+              );
+            })()}
             <button
               type="button"
               onClick={() => onImagesSelected(draftImages)}
               disabled={!draftImages.some((image) => image.role === "receipt")}
-              className="flex-1 inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-3 font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
+              className="ml-auto inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-3 font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -262,37 +301,7 @@ export function PhotoCapture({ onImagesSelected, onError }: PhotoCaptureProps) {
                 <path d="M5 12h14" />
                 <path d="m12 5 7 7-7 7" />
               </svg>
-              Continue with selected
-            </button>
-            <button
-              type="button"
-              onClick={() => startCamera(draftImages.some((image) => image.role === "receipt") ? "odometer" : "receipt")}
-              className="inline-flex items-center justify-center gap-2 rounded-lg border border-border px-4 py-3 font-medium text-foreground transition-colors hover:bg-secondary"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="18"
-                height="18"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" />
-                <circle cx="12" cy="13" r="3" />
-              </svg>
-              {draftImages.some((image) => image.role === "receipt")
-                ? "Capture odometer"
-                : "Capture receipt"}
-            </button>
-            <button
-              type="button"
-              onClick={() => setDraftImages([])}
-              className="inline-flex items-center justify-center gap-2 rounded-lg border border-border px-4 py-3 font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
-            >
-              Start over
+              Continue
             </button>
           </div>
         </div>
