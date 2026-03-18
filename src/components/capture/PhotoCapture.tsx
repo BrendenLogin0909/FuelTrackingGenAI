@@ -52,13 +52,11 @@ export function PhotoCapture({ onImagesSelected, onError }: PhotoCaptureProps) {
         video: { facingMode: "environment" },
       });
       setStream(mediaStream);
-    } catch (err) {
+    } catch {
       onError?.("Camera access denied or unavailable");
     }
   };
 
-  // Assign srcObject after video mounts (video is conditionally rendered when stream is set,
-  // so videoRef.current is null during startCamera)
   useEffect(() => {
     if (!stream || !videoRef.current) return;
     videoRef.current.srcObject = stream;
@@ -109,98 +107,182 @@ export function PhotoCapture({ onImagesSelected, onError }: PhotoCaptureProps) {
       />
 
       {!stream && draftImages.length === 0 ? (
-        <div className="flex flex-col gap-2">
+        <div className="grid gap-3 sm:grid-cols-2">
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className="rounded-lg bg-slate-700 px-4 py-3 text-white hover:bg-slate-600"
+            className="group flex flex-col items-center gap-3 rounded-xl border border-border bg-card p-6 transition-all hover:border-primary/50 hover:bg-secondary/50"
           >
-            Upload photos
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary transition-transform group-hover:scale-110">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="17 8 12 3 7 8" />
+                <line x1="12" x2="12" y1="3" y2="15" />
+              </svg>
+            </div>
+            <div className="text-center">
+              <p className="font-medium text-foreground">Upload photos</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Select receipt images from your device
+              </p>
+            </div>
           </button>
           <button
             type="button"
             onClick={() => startCamera("receipt")}
-            className="rounded-lg border border-slate-600 px-4 py-3 text-slate-700 hover:bg-slate-100"
+            className="group flex flex-col items-center gap-3 rounded-xl border border-border bg-card p-6 transition-all hover:border-primary/50 hover:bg-secondary/50"
           >
-            Take photo
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary transition-transform group-hover:scale-110">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" />
+                <circle cx="12" cy="13" r="3" />
+              </svg>
+            </div>
+            <div className="text-center">
+              <p className="font-medium text-foreground">Take photo</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Use your camera to capture receipt
+              </p>
+            </div>
           </button>
         </div>
       ) : !stream ? (
-        <div className="space-y-4 rounded-lg border border-slate-200 p-4">
+        <div className="space-y-4 rounded-xl border border-border bg-card p-4 md:p-6">
           <div>
-            <p className="text-sm font-medium text-slate-700">
-              {draftImages.some((image) => image.preview_url)
-                ? "Review and assign image roles"
-                : "Review captured images"}
-            </p>
-            <p className="text-sm text-slate-500">
-              Receipt is required. Odometer is optional and should only be a dashboard/odometer photo.
+            <h3 className="font-medium text-foreground">Review and assign image roles</h3>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Receipt is required. Odometer is optional for efficiency tracking.
             </p>
           </div>
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid gap-4 sm:grid-cols-2">
             {draftImages.map((image) => (
               <div
                 key={image.id}
-                className="space-y-2 rounded-lg border border-slate-200 p-3"
+                className="group relative overflow-hidden rounded-lg border border-border bg-secondary/30"
               >
                 {image.preview_url && (
                   <img
                     src={image.preview_url}
                     alt={`${image.role} preview`}
-                    className="h-40 w-full rounded-md object-cover"
+                    className="h-40 w-full object-cover"
                   />
                 )}
-                <label className="block text-sm font-medium text-slate-700">
-                  Image role
-                </label>
-                <select
-                  value={image.role}
-                  onChange={(e) =>
-                    setDraftImages((current) =>
-                      current.map((entry) =>
-                        entry.id === image.id
-                          ? {
-                              ...entry,
-                              role: e.target.value as TransactionImageRole,
-                            }
-                          : entry
+                <div className="p-3 space-y-2">
+                  <label className="block text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                    Image role
+                  </label>
+                  <select
+                    value={image.role}
+                    onChange={(e) =>
+                      setDraftImages((current) =>
+                        current.map((entry) =>
+                          entry.id === image.id
+                            ? {
+                                ...entry,
+                                role: e.target.value as TransactionImageRole,
+                              }
+                            : entry
+                        )
                       )
-                    )
-                  }
-                  className="w-full rounded-md border border-slate-300 px-3 py-2"
-                >
-                  <option value="receipt">Receipt</option>
-                  <option value="odometer">Odometer</option>
-                  <option value="other">Other</option>
-                </select>
-                <button
-                  type="button"
-                  onClick={() =>
-                    setDraftImages((current) =>
-                      current.filter((entry) => entry.id !== image.id)
-                    )
-                  }
-                  className="text-sm text-red-600 hover:text-red-700"
-                >
-                  Remove image
-                </button>
+                    }
+                    className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                  >
+                    <option value="receipt">Receipt</option>
+                    <option value="odometer">Odometer</option>
+                    <option value="other">Other</option>
+                  </select>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setDraftImages((current) =>
+                        current.filter((entry) => entry.id !== image.id)
+                      )
+                    }
+                    className="flex items-center gap-1 text-sm text-destructive transition-colors hover:text-destructive/80"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="14"
+                      height="14"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M3 6h18" />
+                      <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+                      <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+                    </svg>
+                    Remove
+                  </button>
+                </div>
               </div>
             ))}
           </div>
-          <div className="flex flex-col gap-2 sm:flex-row">
+          <div className="flex flex-col gap-2 pt-2 sm:flex-row">
             <button
               type="button"
               onClick={() => onImagesSelected(draftImages)}
               disabled={!draftImages.some((image) => image.role === "receipt")}
-              className="flex-1 rounded-lg bg-slate-800 px-4 py-3 text-white hover:bg-slate-700 disabled:cursor-not-allowed disabled:bg-slate-300"
+              className="flex-1 inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-3 font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              Use selected images
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M5 12h14" />
+                <path d="m12 5 7 7-7 7" />
+              </svg>
+              Continue with selected
             </button>
             <button
               type="button"
               onClick={() => startCamera(draftImages.some((image) => image.role === "receipt") ? "odometer" : "receipt")}
-              className="rounded-lg border border-slate-400 px-4 py-3 text-slate-700 hover:bg-slate-100"
+              className="inline-flex items-center justify-center gap-2 rounded-lg border border-border px-4 py-3 font-medium text-foreground transition-colors hover:bg-secondary"
             >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" />
+                <circle cx="12" cy="13" r="3" />
+              </svg>
               {draftImages.some((image) => image.role === "receipt")
                 ? "Capture odometer"
                 : "Capture receipt"}
@@ -208,38 +290,56 @@ export function PhotoCapture({ onImagesSelected, onError }: PhotoCaptureProps) {
             <button
               type="button"
               onClick={() => setDraftImages([])}
-              className="rounded-lg border border-slate-400 px-4 py-3 text-slate-700 hover:bg-slate-100"
+              className="inline-flex items-center justify-center gap-2 rounded-lg border border-border px-4 py-3 font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
             >
               Start over
             </button>
           </div>
         </div>
       ) : (
-        <div className="space-y-2">
-          <p className="text-sm font-medium text-slate-700">
-            {cameraStep === "receipt"
-              ? "Step 1: Capture receipt"
-              : "Step 2: Capture odometer (optional)"}
-          </p>
+        <div className="space-y-4 rounded-xl border border-border bg-card p-4 md:p-6">
+          <div className="flex items-center gap-2">
+            <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
+              {cameraStep === "receipt" ? "1" : "2"}
+            </div>
+            <h3 className="font-medium text-foreground">
+              {cameraStep === "receipt"
+                ? "Capture your receipt"
+                : "Capture odometer (optional)"}
+            </h3>
+          </div>
           <video
             ref={videoRef}
             autoPlay
             playsInline
             muted
-            className="w-full max-h-64 rounded-lg bg-black object-contain"
+            className="w-full max-h-72 rounded-lg bg-black object-contain"
           />
           <div className="flex gap-2">
             <button
               type="button"
               onClick={capturePhoto}
-              className="flex-1 rounded-lg bg-green-600 px-4 py-2 text-white hover:bg-green-700"
+              className="flex-1 inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-3 font-medium text-primary-foreground transition-colors hover:bg-primary/90"
             >
-              Capture {cameraStep}
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <circle cx="12" cy="12" r="10" />
+              </svg>
+              Capture
             </button>
             <button
               type="button"
               onClick={stopCamera}
-              className="rounded-lg border border-slate-400 px-4 py-2 hover:bg-slate-100"
+              className="inline-flex items-center justify-center gap-2 rounded-lg border border-border px-4 py-3 font-medium text-foreground transition-colors hover:bg-secondary"
             >
               Cancel
             </button>

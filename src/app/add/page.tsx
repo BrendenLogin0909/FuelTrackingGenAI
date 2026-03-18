@@ -2,12 +2,12 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { PhotoCapture } from "@/components/capture/PhotoCapture";
 import { TransactionForm } from "@/components/forms/TransactionForm";
 import { useTransactions } from "@/hooks/useTransactions";
 import { extractFromImages } from "@/lib/ocr";
 import { generateId } from "@/lib/utils";
+import { Header } from "@/components/layout/Header";
 import type { FuelTransaction, TransactionImageInput } from "@/lib/types/transaction";
 
 type Step = "choose" | "capture" | "form" | "manual";
@@ -64,7 +64,7 @@ export default function AddTransactionPage() {
       };
       setPrefill(draft);
       setStep("form");
-    } catch (err) {
+    } catch {
       const now = new Date().toISOString();
       const receiptFiles = selectedImages.filter((image) => image.role === "receipt");
       const odometerFiles = selectedImages.filter((image) => image.role === "odometer");
@@ -109,46 +109,97 @@ export default function AddTransactionPage() {
   };
 
   return (
-    <main className={`mx-auto px-4 py-6 ${step === "form" ? "max-w-4xl" : "max-w-lg"}`}>
-      <div className="mb-6 flex items-center justify-between">
-        <Link href="/" className="text-slate-600 hover:text-slate-800">
-          ← Back
-        </Link>
-        <h1 className="text-xl font-semibold">Add fuel transaction</h1>
-      </div>
+    <>
+      <Header title="Add Transaction" showBack />
+      <main className="flex-1">
+        <div className={`mx-auto px-4 py-6 md:px-6 md:py-8 ${step === "form" ? "max-w-5xl" : "max-w-lg"}`}>
+          {extracting ? (
+            <div className="flex min-h-[300px] flex-col items-center justify-center gap-4 rounded-xl border border-border bg-card p-8">
+              <div className="relative">
+                <div className="h-12 w-12 animate-spin rounded-full border-2 border-muted border-t-primary" />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="text-primary"
+                  >
+                    <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" />
+                    <circle cx="12" cy="13" r="3" />
+                  </svg>
+                </div>
+              </div>
+              <div className="text-center">
+                <p className="font-medium text-foreground">Analyzing your receipt...</p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  First scan loads the OCR engine (~5s), then a few seconds per image
+                </p>
+              </div>
+            </div>
+          ) : step === "choose" ? (
+            <div className="space-y-6">
+              <div className="text-center">
+                <h2 className="text-xl font-semibold text-foreground">How would you like to add?</h2>
+                <p className="mt-1 text-muted-foreground">
+                  Upload a receipt for automatic extraction or enter details manually.
+                </p>
+              </div>
 
-      {extracting ? (
-        <div className="flex min-h-[200px] flex-col items-center justify-center gap-4 rounded-lg border border-slate-200 bg-slate-50 py-12">
-          <div className="h-8 w-8 animate-spin rounded-full border-2 border-slate-400 border-t-slate-700" />
-          <p className="text-center text-slate-700">Extracting data from photos…</p>
-          <p className="text-sm text-slate-500">First run loads OCR engine (~5s), then a few seconds per image</p>
-        </div>
-      ) : step === "choose" ? (
-        <div className="space-y-4">
-          <PhotoCapture
-            onImagesSelected={handleImagesSelected}
-            onError={(msg) => alert(msg)}
-          />
-          <div className="border-t border-slate-200 pt-4">
-            <button
-              type="button"
-              onClick={handleManualEntry}
-              className="w-full rounded-lg border border-slate-400 px-4 py-3 text-slate-700 hover:bg-slate-50"
-            >
-              Enter manually
-            </button>
-          </div>
-        </div>
-      ) : null}
+              <PhotoCapture
+                onImagesSelected={handleImagesSelected}
+                onError={(msg) => alert(msg)}
+              />
+              
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t border-border" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-background px-2 text-muted-foreground">or</span>
+                </div>
+              </div>
 
-      {step === "form" && !extracting && (
-        <TransactionForm
-          initial={prefill}
-          onSubmit={handleSubmit}
-          onCancel={() => router.push("/")}
-        />
-      )}
-    </main>
+              <button
+                type="button"
+                onClick={handleManualEntry}
+                className="group flex w-full items-center justify-center gap-3 rounded-xl border border-border bg-card p-4 text-foreground transition-all hover:border-primary/50 hover:bg-secondary/50"
+              >
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-secondary text-muted-foreground transition-colors group-hover:bg-primary/10 group-hover:text-primary">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
+                  </svg>
+                </div>
+                <span className="font-medium">Enter details manually</span>
+              </button>
+            </div>
+          ) : null}
+
+          {step === "form" && !extracting && (
+            <TransactionForm
+              initial={prefill}
+              onSubmit={handleSubmit}
+              onCancel={() => router.push("/")}
+            />
+          )}
+        </div>
+      </main>
+    </>
   );
 }
 
