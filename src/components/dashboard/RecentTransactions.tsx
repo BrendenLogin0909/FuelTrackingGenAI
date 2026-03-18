@@ -12,7 +12,16 @@ export function RecentTransactions({
   transactions,
   maxDisplay = 5,
 }: RecentTransactionsProps) {
-  const list = transactions.slice(0, maxDisplay);
+  const list = [...transactions]
+    .sort((a, b) => {
+      const dateDelta = new Date(b.date).getTime() - new Date(a.date).getTime();
+      if (dateDelta !== 0) {
+        return dateDelta;
+      }
+
+      return new Date(b.created_at ?? 0).getTime() - new Date(a.created_at ?? 0).getTime();
+    })
+    .slice(0, maxDisplay);
 
   if (list.length === 0) {
     return (

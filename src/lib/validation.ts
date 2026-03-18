@@ -41,6 +41,10 @@ export function validateTotalCost(value: number): boolean {
   return Number.isFinite(value) && value >= 0 && value <= 10000;
 }
 
+export function validatePricePerLitre(value: number): boolean {
+  return Number.isFinite(value) && value >= 0 && value <= 100;
+}
+
 export function validateOdometer(value: number): boolean {
   return Number.isInteger(value) && value >= 0 && value <= 9999999;
 }

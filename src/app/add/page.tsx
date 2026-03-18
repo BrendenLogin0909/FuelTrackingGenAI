@@ -8,7 +8,7 @@ import { TransactionForm } from "@/components/forms/TransactionForm";
 import { useTransactions } from "@/hooks/useTransactions";
 import { extractFromImages } from "@/lib/ocr";
 import { generateId } from "@/lib/utils";
-import type { FuelTransaction } from "@/lib/types/transaction";
+import type { FuelTransaction, TransactionImageInput } from "@/lib/types/transaction";
 
 type Step = "choose" | "capture" | "form" | "manual";
 
@@ -18,19 +18,34 @@ export default function AddTransactionPage() {
   const [step, setStep] = useState<Step>("choose");
   const [extracting, setExtracting] = useState(false);
   const [prefill, setPrefill] = useState<Partial<FuelTransaction>>({});
-  const [images, setImages] = useState<string[]>([]);
 
-  const handleImagesSelected = async (files: File[]) => {
+  const handleImagesSelected = async (selectedImages: TransactionImageInput[]) => {
     setExtracting(true);
     try {
-      const extracted = await extractFromImages(files);
+      const extracted = await extractFromImages(
+        selectedImages.map((image) => ({
+          role: image.role,
+          image: image.file,
+        }))
+      );
       const now = new Date().toISOString();
       const date = extracted.date ?? now.slice(0, 10);
-      const receiptData = await fileToBase64(files[0]);
+      const receiptFiles = selectedImages.filter((image) => image.role === "receipt");
+      const odometerFiles = selectedImages.filter((image) => image.role === "odometer");
+      const otherFiles = selectedImages.filter((image) => image.role === "other");
+      const receiptData =
+        receiptFiles[0] ? await fileToBase64(receiptFiles[0].file) : undefined;
       const odometerData =
-        files.length > 1 ? await fileToBase64(files[1]) : undefined;
+        odometerFiles[0] ? await fileToBase64(odometerFiles[0].file) : undefined;
+      const remainingFiles = [
+        ...receiptFiles.slice(1),
+        ...odometerFiles.slice(1),
+        ...otherFiles,
+      ];
       const extraImages =
-        files.length > 2 ? await Promise.all(files.slice(2).map(fileToBase64)) : undefined;
+        remainingFiles.length > 0
+          ? await Promise.all(remainingFiles.map((image) => fileToBase64(image.file)))
+          : undefined;
 
       const draft: FuelTransaction = {
         id: generateId(),
@@ -47,24 +62,31 @@ export default function AddTransactionPage() {
         created_at: now,
         updated_at: now,
       };
-      await save(draft);
       setPrefill(draft);
-      setImages([receiptData, odometerData].filter(Boolean) as string[]);
       setStep("form");
     } catch (err) {
       const now = new Date().toISOString();
-      const receiptData = await fileToBase64(files[0]);
+      const receiptFiles = selectedImages.filter((image) => image.role === "receipt");
+      const odometerFiles = selectedImages.filter((image) => image.role === "odometer");
+      const otherFiles = selectedImages.filter((image) => image.role === "other");
+      const receiptData =
+        receiptFiles[0] ? await fileToBase64(receiptFiles[0].file) : undefined;
       const odometerData =
-        files.length > 1 ? await fileToBase64(files[1]) : undefined;
+        odometerFiles[0] ? await fileToBase64(odometerFiles[0].file) : undefined;
+      const extraImages = await Promise.all(
+        [...receiptFiles.slice(1), ...odometerFiles.slice(1), ...otherFiles].map((image) =>
+          fileToBase64(image.file)
+        )
+      );
       const draft: FuelTransaction = {
         id: generateId(),
         date: now.slice(0, 10),
         receipt_image: receiptData,
         odometer_image: odometerData,
+        extra_images: extraImages.length > 0 ? extraImages : undefined,
         created_at: now,
         updated_at: now,
       };
-      await save(draft);
       setPrefill(draft);
       setStep("form");
     } finally {
@@ -95,7 +117,13 @@ export default function AddTransactionPage() {
         <h1 className="text-xl font-semibold">Add fuel transaction</h1>
       </div>
 
-      {step === "choose" && (
+      {extracting ? (
+        <div className="flex min-h-[200px] flex-col items-center justify-center gap-4 rounded-lg border border-slate-200 bg-slate-50 py-12">
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-slate-400 border-t-slate-700" />
+          <p className="text-center text-slate-700">Extracting data from photos…</p>
+          <p className="text-sm text-slate-500">First run loads OCR engine (~5s), then a few seconds per image</p>
+        </div>
+      ) : step === "choose" ? (
         <div className="space-y-4">
           <PhotoCapture
             onImagesSelected={handleImagesSelected}
@@ -111,13 +139,7 @@ export default function AddTransactionPage() {
             </button>
           </div>
         </div>
-      )}
-
-      {extracting && (
-        <div className="py-8 text-center text-slate-600">
-          Extracting data from photos…
-        </div>
-      )}
+      ) : null}
 
       {step === "form" && !extracting && (
         <TransactionForm
