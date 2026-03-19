@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useTransactions } from "@/hooks/useTransactions";
 import { Header } from "@/components/layout/Header";
+import { PlusIcon, FuelIcon, ChevronRightIcon } from "@/components/icons";
 import type { FuelTransaction } from "@/lib/types/transaction";
 
 export default function TransactionsListPage() {
@@ -56,20 +57,7 @@ export default function TransactionsListPage() {
             href="/add"
             className="inline-flex items-center gap-2 rounded-lg bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M12 5v14" />
-              <path d="M5 12h14" />
-            </svg>
+            <PlusIcon size={16} />
             <span className="hidden sm:inline">Add</span>
           </Link>
         }
@@ -79,21 +67,7 @@ export default function TransactionsListPage() {
           {sortedTransactions.length === 0 ? (
             <div className="rounded-xl border border-dashed border-border bg-card/50 p-8 text-center md:p-12">
               <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="text-primary"
-                >
-                  <path d="M12 5v14" />
-                  <path d="M5 12h14" />
-                </svg>
+                <PlusIcon size={24} className="text-primary" />
               </div>
               <h3 className="mb-1 text-lg font-medium text-foreground">No transactions yet</h3>
               <p className="mb-4 text-sm text-muted-foreground">
@@ -128,20 +102,7 @@ export default function TransactionsListPage() {
                             className="flex items-center gap-4 px-4 py-3 transition-colors hover:bg-secondary/50 md:px-5 md:py-4"
                           >
                             <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-primary/10 md:h-12 md:w-12">
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="20"
-                                height="20"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                className="text-primary"
-                              >
-                                <path d="M3 14h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-7a9 9 0 0 1 18 0v7a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3" />
-                              </svg>
+                              <FuelIcon size={20} className="text-primary" />
                             </div>
                             <div className="min-w-0 flex-1">
                               <div className="flex items-center gap-2">
@@ -176,20 +137,10 @@ export default function TransactionsListPage() {
                                 </p>
                               )}
                             </div>
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              width="16"
-                              height="16"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
+                            <ChevronRightIcon
+                              size={16}
                               className="flex-shrink-0 text-muted-foreground"
-                            >
-                              <path d="m9 18 6-6-6-6" />
-                            </svg>
+                            />
                           </Link>
                         </li>
                       ))}

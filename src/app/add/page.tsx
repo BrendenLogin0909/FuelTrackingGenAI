@@ -8,6 +8,7 @@ import { useTransactions } from "@/hooks/useTransactions";
 import { extractFromImages } from "@/lib/ocr";
 import { generateId } from "@/lib/utils";
 import { Header } from "@/components/layout/Header";
+import { CameraIcon, PenIcon } from "@/components/icons";
 import type { FuelTransaction, TransactionImageInput } from "@/lib/types/transaction";
 
 type Step = "choose" | "capture" | "form" | "manual";
@@ -118,21 +119,7 @@ export default function AddTransactionPage() {
               <div className="relative">
                 <div className="h-12 w-12 animate-spin rounded-full border-2 border-muted border-t-primary" />
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="20"
-                    height="20"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="text-primary"
-                  >
-                    <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" />
-                    <circle cx="12" cy="13" r="3" />
-                  </svg>
+                  <CameraIcon size={20} className="text-primary" />
                 </div>
               </div>
               <div className="text-center">
@@ -171,19 +158,7 @@ export default function AddTransactionPage() {
                 className="group flex w-full items-center justify-center gap-3 rounded-xl border border-border bg-card p-4 text-foreground transition-all hover:border-primary/50 hover:bg-secondary/50"
               >
                 <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-secondary text-muted-foreground transition-colors group-hover:bg-primary/10 group-hover:text-primary">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="20"
-                    height="20"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
-                  </svg>
+                  <PenIcon size={20} />
                 </div>
                 <span className="font-medium">Enter details manually</span>
               </button>
