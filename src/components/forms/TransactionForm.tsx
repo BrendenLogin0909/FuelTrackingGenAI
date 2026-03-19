@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   AUSTRALIAN_FUEL_TYPES,
   type FuelTransaction,
@@ -45,6 +45,7 @@ export function TransactionForm({
   const [stationName, setStationName] = useState("");
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [pricePerLitreEdited, setPricePerLitreEdited] = useState(false);
+  const dateInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (initial) {
@@ -137,13 +138,29 @@ export function TransactionForm({
             </h3>
             <div className="grid gap-4 sm:grid-cols-2">
               <FormField label="Date" htmlFor="date">
-                <input
-                  id="date"
-                  type="date"
-                  value={date}
-                  onChange={(e) => setDate(e.target.value)}
-                  className="w-full rounded-lg border border-input bg-background px-3 py-2.5 text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-                />
+                <div className="relative">
+                  <input
+                    ref={dateInputRef}
+                    id="date"
+                    type="date"
+                    value={date}
+                    onChange={(e) => setDate(e.target.value)}
+                    className="w-full rounded-lg border border-input bg-background px-3 py-2.5 pr-10 text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (dateInputRef.current) {
+                        dateInputRef.current.showPicker?.() ?? dateInputRef.current.focus();
+                      }
+                    }}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                    title="Open date picker"
+                    aria-label="Open date picker"
+                  >
+                    <CalendarIcon size={18} />
+                  </button>
+                </div>
               </FormField>
               <FormField label="Station name" htmlFor="stationName" optional>
                 <input

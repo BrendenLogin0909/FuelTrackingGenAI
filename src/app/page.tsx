@@ -59,6 +59,15 @@ export default function DashboardPage() {
             <p className="mt-1 text-muted-foreground">
               Track efficiency, costs, and patterns at a glance.
             </p>
+            <div className="mt-4">
+              <Link
+                href="/reports"
+                className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-sm font-medium text-foreground transition-colors hover:border-primary/40 hover:bg-secondary md:px-4"
+              >
+                <ChartIcon size={16} />
+                <span>Open Reports</span>
+              </Link>
+            </div>
           </div>
 
           {/* Metrics Grid */}

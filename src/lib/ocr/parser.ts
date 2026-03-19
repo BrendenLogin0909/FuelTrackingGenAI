@@ -122,8 +122,22 @@ export function parseOcrText(text: string): ExtractedFields {
     }
   }
   if (!result.date) {
-    const today = new Date().toISOString().slice(0, 10);
-    result.date = today;
+    const MONTH_ALIASES: Record<string, string> = {
+      JAN: "01", FEB: "02", MAR: "03", M4R: "03", MAK: "03", NAR: "03", APR: "04", MAY: "05",
+      JUN: "06", JUL: "07", AUG: "08", SEP: "09", OCT: "10", NOV: "11", DEC: "12",
+    };
+    const textMonthMatch = normalized.match(
+      /(\d{1,2})\s+(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC|M4R|MAK|NAR)[A-Z]*\s+(\d{2,4})\b/i
+    );
+    if (textMonthMatch) {
+      const [, d, m, y] = textMonthMatch;
+      const monthNum = MONTH_ALIASES[m!.toUpperCase().slice(0, 3)];
+      const year = (y!.length === 2 ? `20${y}` : y!) as string;
+      if (monthNum) result.date = `${year}-${monthNum}-${d!.padStart(2, "0")}`;
+    }
+  }
+  if (!result.date) {
+    result.date = new Date().toISOString().slice(0, 10);
   }
 
   // Station name - often first non-empty line or contains "petrol"/"fuel"/"service"
@@ -167,6 +181,198 @@ export function parseOcrText(text: string): ExtractedFields {
   if (tripMatch) result.trip_meter = parseFloat(tripMatch[1]);
 
   return result;
+}
+
+export type OcrQualityLabel = "strong" | "moderate" | "weak";
+
+export interface OcrQualityScore {
+  score: number;
+  label: OcrQualityLabel;
+  completeness: number;
+  consistency: number;
+  textSignals: {
+    hasTotalCue: boolean;
+    hasLitresCue: boolean;
+    hasPriceCue: boolean;
+    hasOdometerCue: boolean;
+    hasFuelCue: boolean;
+    hasDateCue: boolean;
+  };
+  presentFields: Array<keyof ExtractedFields>;
+  missingFields: Array<keyof ExtractedFields>;
+  reasons: string[];
+  shouldFallback: boolean;
+}
+
+export interface OcrQualityOptions {
+  requiredFields?: Array<keyof ExtractedFields>;
+}
+
+const OCR_QUALITY_FIELD_WEIGHTS: Record<keyof ExtractedFields, number> = {
+  total_cost: 22,
+  litres: 18,
+  price_per_litre: 14,
+  station_name: 8,
+  fuel_type: 10,
+  date: 10,
+  odometer: 14,
+  trip_meter: 4,
+};
+
+const OCR_REQUIRED_RECEIPT_FIELDS: Array<keyof ExtractedFields> = ["total_cost", "litres"];
+
+export function scoreParsedOcrFields(
+  text: string,
+  fields: Partial<ExtractedFields>,
+  options: OcrQualityOptions = {}
+): OcrQualityScore {
+  const requiredFields = options.requiredFields ?? OCR_REQUIRED_RECEIPT_FIELDS;
+  const normalized = normalizeOcrText(text);
+  const presentFields = Object.entries(fields)
+    .filter(([, value]) => value !== undefined && value !== null)
+    .map(([key]) => key as keyof ExtractedFields);
+  const missingFields = (Object.keys(OCR_QUALITY_FIELD_WEIGHTS) as Array<keyof ExtractedFields>)
+    .filter((field) => fields[field] == null);
+
+  const textSignals = {
+    hasTotalCue: /\b(total|amount|sum|paid)\b/i.test(normalized),
+    hasLitresCue: /\b(l|litres?|quantity|qty|volume)\b/i.test(normalized),
+    hasPriceCue: /\b(?:@|ppl|price\s*per\s*(?:litre|l)|rate)\b/i.test(normalized),
+    hasOdometerCue: /\b(?:odo(?:meter)?|mileage|kilomet(?:er|re)s?|km)\b/i.test(normalized),
+    hasFuelCue: /\b(?:u91|p95|p98|e10|e85|diesel|lpg|unleaded|premium)\b/i.test(normalized),
+    hasDateCue: /\b(?:\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4}|\d{4}[\/\-]\d{2}[\/\-]\d{2}|jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\b/i.test(
+      normalized
+    ),
+  };
+
+  let score = 0;
+  let reasons: string[] = [];
+
+  for (const field of presentFields) {
+    score += OCR_QUALITY_FIELD_WEIGHTS[field];
+  }
+
+  if (fields.total_cost != null) {
+    score += textSignals.hasTotalCue ? 6 : 0;
+    if (fields.total_cost > 0 && fields.total_cost < 5000) score += 4;
+    if (fields.total_cost <= 0 || fields.total_cost >= 5000) reasons.push("total_cost_out_of_range");
+  }
+
+  if (fields.litres != null) {
+    score += textSignals.hasLitresCue ? 5 : 0;
+    if (fields.litres > 0 && fields.litres < 1000) score += 3;
+    if (fields.litres <= 0 || fields.litres >= 1000) reasons.push("litres_out_of_range");
+  }
+
+  if (fields.price_per_litre != null) {
+    score += textSignals.hasPriceCue ? 4 : 0;
+    if (fields.price_per_litre > 0 && fields.price_per_litre < 10) score += 2;
+    if (fields.price_per_litre <= 0 || fields.price_per_litre >= 10) reasons.push("price_per_litre_out_of_range");
+  }
+
+  if (fields.odometer != null) {
+    score += textSignals.hasOdometerCue ? 6 : 0;
+    if (fields.odometer >= 1000 && fields.odometer <= 999999) score += 4;
+    if (fields.odometer < 1000 || fields.odometer > 999999) reasons.push("odometer_out_of_range");
+  }
+
+  if (fields.trip_meter != null) {
+    score += 2;
+  }
+
+  const completeness = presentFields.length / Object.keys(OCR_QUALITY_FIELD_WEIGHTS).length;
+
+  if (fields.total_cost != null && fields.litres != null && fields.price_per_litre != null) {
+    const expectedTotal = Math.round(fields.litres * fields.price_per_litre * 100) / 100;
+    const totalDiff = Math.abs(fields.total_cost - expectedTotal);
+    if (totalDiff <= 0.05) {
+      score += 12;
+    } else if (totalDiff <= 0.25) {
+      score += 6;
+      reasons.push("weak_total_litres_rate_consistency");
+    } else {
+      score -= 12;
+      reasons.push("total_litres_rate_mismatch");
+    }
+  } else if (fields.total_cost != null && fields.litres != null) {
+    score += 4;
+  }
+
+  if (fields.fuel_type) {
+    score += textSignals.hasFuelCue ? 4 : 0;
+  }
+
+  if (fields.date) {
+    score += textSignals.hasDateCue ? 4 : 0;
+  }
+
+  const signalMatches = Object.values(textSignals).filter(Boolean).length;
+  score += signalMatches * 2;
+
+  if (normalized.length < 20) {
+    score -= 20;
+    reasons.push("text_too_short");
+  } else if (normalized.length < 60) {
+    score -= 8;
+    reasons.push("text_short");
+  }
+
+  if (presentFields.length === 0) {
+    score -= 18;
+    reasons.push("no_fields_parsed");
+  }
+
+  const uniqueReasons = Array.from(new Set(reasons));
+  score = clampScore(score);
+  const label = score >= 75 ? "strong" : score >= 45 ? "moderate" : "weak";
+  const shouldFallback =
+    label === "weak" ||
+    requiredFields.some((field) => fields[field] == null) ||
+    uniqueReasons.includes("total_litres_rate_mismatch");
+
+  return {
+    score,
+    label,
+    completeness,
+    consistency: scoreConsistency(fields),
+    textSignals,
+    presentFields,
+    missingFields,
+    reasons: uniqueReasons,
+    shouldFallback,
+  };
+}
+
+export function shouldFallbackToServerOcr(
+  text: string,
+  fields: Partial<ExtractedFields>,
+  options: OcrQualityOptions = {}
+): boolean {
+  return scoreParsedOcrFields(text, fields, options).shouldFallback;
+}
+
+function normalizeOcrText(text: string): string {
+  return text.replace(/\r\n/g, "\n").replace(/\s+/g, " ").trim();
+}
+
+function clampScore(score: number): number {
+  return Math.max(0, Math.min(100, Math.round(score)));
+}
+
+function scoreConsistency(fields: Partial<ExtractedFields>): number {
+  if (fields.total_cost != null && fields.litres != null && fields.price_per_litre != null) {
+    const expectedTotal = Math.round(fields.litres * fields.price_per_litre * 100) / 100;
+    const totalDiff = Math.abs(fields.total_cost - expectedTotal);
+    if (totalDiff <= 0.05) return 1;
+    if (totalDiff <= 0.25) return 0.6;
+    return 0.2;
+  }
+
+  if (fields.total_cost != null && fields.litres != null) {
+    return 0.65;
+  }
+
+  return 0.35;
 }
 
 function extractFuelType(text: string): FuelTypeOption | undefined {
