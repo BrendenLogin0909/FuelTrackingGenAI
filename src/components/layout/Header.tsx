@@ -13,11 +13,7 @@ interface HeaderProps {
 
 export function Header({ title = "FuelTrack", showBack = false, backHref = "/", action }: HeaderProps) {
   const pathname = usePathname();
-  const navItems = [
-    { href: "/", label: "Dashboard" },
-    { href: "/reports", label: "Reports" },
-    { href: "/transactions", label: "History" },
-  ];
+  const isHome = pathname === "/";
 
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-xl">
@@ -41,24 +37,22 @@ export function Header({ title = "FuelTrack", showBack = false, backHref = "/", 
         </div>
         <div className="flex items-center gap-2">
           {action}
-          <nav className="hidden items-center gap-1 md:flex">
-            {navItems.map((item) => {
-              const isActive = pathname === item.href;
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={`rounded-lg px-3 py-2 text-sm font-medium transition-colors hover:bg-secondary ${
-                    isActive
-                      ? "text-foreground"
-                      : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  {item.label}
-                </Link>
-              );
-            })}
-          </nav>
+          {isHome && (
+            <nav className="hidden items-center gap-1 md:flex">
+              <Link
+                href="/"
+                className="rounded-lg px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-secondary"
+              >
+                Dashboard
+              </Link>
+              <Link
+                href="/transactions"
+                className="rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+              >
+                History
+              </Link>
+            </nav>
+          )}
         </div>
       </div>
     </header>
