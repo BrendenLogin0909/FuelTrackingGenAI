@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "test": "jest --testPathIgnorePatterns=e2e",
+    "test:ocr-training": "jest src/lib/ocr/__tests__/parser-training-ground.test.ts",
     "test:e2e": "playwright test"
   },
   "dependencies": {

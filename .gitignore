@@ -14,6 +14,13 @@ playwright-report/
 test-results/
 coverage/
 
+# OCR test fixtures (real receipt/odometer photos — never commit)
+src/lib/ocr/training/fixtures/images/*.jpg
+src/lib/ocr/training/fixtures/images/*.jpeg
+src/lib/ocr/training/fixtures/images/*.png
+src/lib/ocr/training/fixtures/images/*.webp
+Project Management/Test Data/OCR Test Images.md
+
 # Environment
 .env
 .env.local

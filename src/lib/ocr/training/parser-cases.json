@@ -1,0 +1,124 @@
+[
+  {
+    "id": "receipt-total-amount",
+    "role": "receipt",
+    "description": "Total and amount paid synonyms",
+    "ocrText": "Total 85.50\nAmount paid: $85.50",
+    "expected": { "total_cost": 85.5 }
+  },
+  {
+    "id": "receipt-litres",
+    "role": "receipt",
+    "ocrText": "Volume: 45.2 L\nLitres 45.2",
+    "expected": { "litres": 45.2 }
+  },
+  {
+    "id": "odometer-labelled",
+    "role": "odometer",
+    "ocrText": "Odometer: 125432 km",
+    "expected": { "odometer": 125432 }
+  },
+  {
+    "id": "odometer-km-suffix",
+    "role": "odometer",
+    "ocrText": "125432 km",
+    "expected": { "odometer": 125432 }
+  },
+  {
+    "id": "receipt-no-spurious-odometer",
+    "role": "receipt",
+    "description": "Receipt numbers must not become odometer",
+    "ocrText": "Receipt No: 123456\nPump 4\nTotal 85.50",
+    "expected": { "total_cost": 85.5 },
+    "mustNotHave": ["odometer"]
+  },
+  {
+    "id": "receipt-date-iso",
+    "role": "receipt",
+    "ocrText": "Date: 15/01/2024\nTotal 50.00",
+    "expected": { "date": "2024-01-15", "total_cost": 50 }
+  },
+  {
+    "id": "receipt-ppl-from-total-litres",
+    "role": "receipt",
+    "ocrText": "Total 90.00\nLitres 45",
+    "expected": { "total_cost": 90, "litres": 45, "price_per_litre": 2 }
+  },
+  {
+    "id": "receipt-explicit-rate",
+    "role": "receipt",
+    "ocrText": "E10 44.03 L @ $2.099/L = $92.42",
+    "expected": {
+      "price_per_litre": 2.099,
+      "litres": 44.03,
+      "total_cost": 92.42
+    }
+  },
+  {
+    "id": "receipt-fuel-type-u91",
+    "role": "receipt",
+    "ocrText": "Fuel type: Unleaded 91\nTotal 40",
+    "expected": { "fuel_type": "U91", "total_cost": 40 }
+  },
+  {
+    "id": "receipt-fuel-type-p95",
+    "role": "receipt",
+    "description": "Total line omitted — assert fuel type only (ambiguous money lines)",
+    "ocrText": "Premium 95 35.00 L",
+    "expected": { "fuel_type": "P95" }
+  },
+  {
+    "id": "receipt-fuel-type-premium-diesel",
+    "role": "receipt",
+    "ocrText": "Vehicle fuel: premium diesel\nTotal 120",
+    "expected": { "fuel_type": "Premium Diesel", "total_cost": 120 }
+  },
+  {
+    "id": "receipt-fuel-type-lpg",
+    "role": "receipt",
+    "ocrText": "LPG / Autogas sale\nTotal 45",
+    "expected": { "fuel_type": "LPG", "total_cost": 45 }
+  },
+  {
+    "id": "receipt-711-fuel-vs-basket-total",
+    "role": "receipt",
+    "description": "Prefer fuel line amount over basket TOTAL",
+    "ocrText": "7-ELEVEN\nE10 fuel: 44.03 L @ $2.099/L = $92.42\n7-ELEVEN 600ML STILL W 1 $14.00\nTOTAL $106.42",
+    "expected": { "total_cost": 92.42 }
+  },
+  {
+    "id": "receipt-ocr-digit-confusion-total",
+    "role": "receipt",
+    "description": "Fuel line misread; Total line correct",
+    "ocrText": "7-ELEVEN\nE10 31.74 L @ $1.879/ L $99.64\nTotal: $59.64\nMASTERCARD: $59.64",
+    "expected": { "total_cost": 59.64, "litres": 31.74 }
+  },
+  {
+    "id": "receipt-loyalty-discount",
+    "role": "receipt",
+    "ocrText": "BP\nPremium Unleaded 95 40.00 L @ $2.10/L = $84.00\nLoyalty discount -$4.00\nCoffee $5.00\nTOTAL $85.00",
+    "expected": { "total_cost": 80 }
+  },
+  {
+    "id": "receipt-station-and-line-items",
+    "role": "receipt",
+    "ocrText": "Total 95.40\nLitres 45.2\nBP Northgate",
+    "expected": {
+      "total_cost": 95.4,
+      "litres": 45.2,
+      "station_name": "BP Northgate"
+    }
+  },
+  {
+    "id": "ab-demo-alternate-worse",
+    "role": "receipt",
+    "description": "Template: alternate OCR string simulates worse read; remove or update when running real A/B",
+    "ocrText": "Total 95.40\nLitres 45.2\nBP Northgate",
+    "alternateOcrText": "Total 95.40\nLitres 4.52\nBP Northgate",
+    "expected": {
+      "total_cost": 95.4,
+      "litres": 45.2,
+      "station_name": "BP Northgate"
+    }
+  }
+]
