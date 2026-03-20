@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { PhotoCapture } from "@/components/capture/PhotoCapture";
 import { TransactionForm } from "@/components/forms/TransactionForm";
 import { useTransactions } from "@/hooks/useTransactions";
-import { extractFromImages } from "@/lib/ocr";
+import { extractFromImages, type OcrProgressStage } from "@/lib/ocr";
 import { generateId } from "@/lib/utils";
 import { Header } from "@/components/layout/Header";
 import { CameraIcon, PenIcon } from "@/components/icons";
@@ -13,21 +13,55 @@ import type { FuelTransaction, TransactionImageInput } from "@/lib/types/transac
 
 type Step = "choose" | "capture" | "form" | "manual";
 
+const STAGE_MESSAGES: Record<
+  OcrProgressStage,
+  { title: string; subtitle: string }
+> = {
+  preparing: {
+    title: "Preparing images…",
+    subtitle: "Compressing for analysis",
+  },
+  "ocr-receipt": {
+    title: "Reading receipt…",
+    subtitle: "Extracting fuel and payment details",
+  },
+  "ocr-odometer": {
+    title: "Reading odometer…",
+    subtitle: "Looking for your km reading",
+  },
+  "retry-receipt": {
+    title: "Re-reading receipt…",
+    subtitle: "Trying another pass",
+  },
+  "retry-odometer": {
+    title: "Re-reading odometer…",
+    subtitle: "Trying another pass",
+  },
+  parsing: {
+    title: "Checking values…",
+    subtitle: "Almost done",
+  },
+};
+
 export default function AddTransactionPage() {
   const router = useRouter();
   const { save } = useTransactions();
   const [step, setStep] = useState<Step>("choose");
   const [extracting, setExtracting] = useState(false);
+  const [extractionStage, setExtractionStage] =
+    useState<OcrProgressStage | null>(null);
   const [prefill, setPrefill] = useState<Partial<FuelTransaction>>({});
 
   const handleImagesSelected = async (selectedImages: TransactionImageInput[]) => {
     setExtracting(true);
+    setExtractionStage(null);
     try {
       const extracted = await extractFromImages(
         selectedImages.map((image) => ({
           role: image.role,
           image: image.file,
-        }))
+        })),
+        { onProgress: (stage) => setExtractionStage(stage) }
       );
       const now = new Date().toISOString();
       const date = extracted.date ?? now.slice(0, 10);
@@ -92,6 +126,7 @@ export default function AddTransactionPage() {
       setStep("form");
     } finally {
       setExtracting(false);
+      setExtractionStage(null);
     }
   };
 
@@ -123,9 +158,19 @@ export default function AddTransactionPage() {
                 </div>
               </div>
               <div className="text-center">
-                <p className="font-medium text-foreground">Analyzing your receipt...</p>
+                <p className="font-medium text-foreground">
+                  {(extractionStage
+                    ? STAGE_MESSAGES[extractionStage]
+                    : STAGE_MESSAGES.preparing
+                  ).title}
+                </p>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  First scan loads the OCR engine (~5s), then a few seconds per image
+                  {(extractionStage
+                    ? STAGE_MESSAGES[extractionStage]
+                    : STAGE_MESSAGES.preparing
+                  ).subtitle}
+                  {" · "}
+                  First scan loads the OCR engine (~5s)
                 </p>
               </div>
             </div>

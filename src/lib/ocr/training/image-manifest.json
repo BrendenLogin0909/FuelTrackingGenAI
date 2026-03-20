@@ -1,0 +1,162 @@
+[
+  {
+    "id": "receipt-001",
+    "filename": "Receipt-001.jpg",
+    "role": "receipt",
+    "critical": false,
+    "expected": {
+      "total_cost": 59.64,
+      "litres": 31.74,
+      "price_per_litre": 1.879,
+      "fuel_type": "E10",
+      "date": "2021-12-04"
+    }
+  },
+  {
+    "id": "receipt-002",
+    "filename": "Receipt-002.jpg",
+    "role": "receipt",
+    "critical": false,
+    "expected": {
+      "total_cost": 48.35,
+      "litres": 28.29,
+      "price_per_litre": 1.709,
+      "fuel_type": "U91",
+      "date": "2021-12-18"
+    }
+  },
+  {
+    "id": "receipt-003",
+    "filename": "Receipt-003.jpg",
+    "role": "receipt",
+    "critical": false,
+    "expected": {
+      "total_cost": 74.01,
+      "litres": 43.82,
+      "price_per_litre": 1.689,
+      "fuel_type": "U91",
+      "date": "2022-02-08"
+    }
+  },
+  {
+    "id": "receipt-004",
+    "filename": "Receipt-004.jpg",
+    "role": "receipt",
+    "critical": false,
+    "expected": {
+      "total_cost": 81.28,
+      "litres": 44.93,
+      "price_per_litre": 1.809,
+      "fuel_type": "E10",
+      "date": "2022-03-05"
+    }
+  },
+  {
+    "id": "receipt-005",
+    "filename": "Receipt-005.jpg",
+    "role": "receipt",
+    "critical": false,
+    "expected": {
+      "total_cost": 74.28,
+      "litres": 43.21,
+      "price_per_litre": 1.719,
+      "fuel_type": "E10",
+      "date": "2022-04-03"
+    }
+  },
+  {
+    "id": "receipt-006",
+    "filename": "Receipt-006.jpg",
+    "role": "receipt",
+    "critical": false,
+    "expected": {
+      "total_cost": 73.29,
+      "litres": 43.65,
+      "price_per_litre": 1.679,
+      "fuel_type": "E10",
+      "date": "2022-04-30"
+    }
+  },
+  {
+    "id": "receipt-007",
+    "filename": "Receipt-007.jpg",
+    "role": "receipt",
+    "critical": false,
+    "expected": {
+      "total_cost": 96.41,
+      "litres": 45.93,
+      "price_per_litre": 2.099,
+      "fuel_type": "U91",
+      "date": "2022-05-24"
+    }
+  },
+  {
+    "id": "receipt-008",
+    "filename": "Receipt-008.jpg",
+    "role": "receipt",
+    "critical": false,
+    "expected": {
+      "total_cost": 62.79,
+      "litres": 34.08,
+      "price_per_litre": 1.845,
+      "fuel_type": "U91",
+      "date": "2022-06-16"
+    }
+  },
+  {
+    "id": "odo-001",
+    "filename": "odo-001.jpg",
+    "role": "odometer",
+    "critical": true,
+    "expected": { "odometer": 1497 }
+  },
+  {
+    "id": "odo-002",
+    "filename": "odo-002.jpg",
+    "role": "odometer",
+    "critical": true,
+    "expected": { "odometer": 1791 }
+  },
+  {
+    "id": "odo-003",
+    "filename": "odo-003.jpg",
+    "role": "odometer",
+    "critical": false,
+    "expected": { "odometer": 5295 }
+  },
+  {
+    "id": "odo-004",
+    "filename": "odo-004.jpg",
+    "role": "odometer",
+    "critical": false,
+    "expected": { "odometer": 5751 }
+  },
+  {
+    "id": "odo-005",
+    "filename": "odo-005.jpg",
+    "role": "odometer",
+    "critical": false,
+    "expected": { "odometer": 6162 }
+  },
+  {
+    "id": "odo-006",
+    "filename": "odo-006.jpg",
+    "role": "odometer",
+    "critical": false,
+    "expected": { "odometer": 6581 }
+  },
+  {
+    "id": "odo-007",
+    "filename": "odo-007.jpg",
+    "role": "odometer",
+    "critical": false,
+    "expected": { "odometer": 7091 }
+  },
+  {
+    "id": "odo-008",
+    "filename": "odo-008.jpg",
+    "role": "odometer",
+    "critical": false,
+    "expected": { "odometer": 7477 }
+  }
+]

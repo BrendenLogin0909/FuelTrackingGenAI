@@ -5,6 +5,21 @@ import {
 } from "../types/transaction";
 import { extractFuelReceiptAmount } from "./receipt-amount";
 
+const MONTH_NAME_TO_NUM: Record<string, string> = {
+  jan: "01",
+  feb: "02",
+  mar: "03",
+  apr: "04",
+  may: "05",
+  jun: "06",
+  jul: "07",
+  aug: "08",
+  sep: "09",
+  oct: "10",
+  nov: "11",
+  dec: "12",
+};
+
 const FUEL_TYPE_PATTERNS: Array<{ fuelType: FuelTypeOption; pattern: RegExp }> = [
   { fuelType: "Premium Diesel", pattern: /\bpremium\s+diesel\b/i },
   { fuelType: "Diesel", pattern: /\b(?:diesel|distillate)\b/i },
@@ -122,30 +137,34 @@ export function parseOcrText(text: string): ExtractedFields {
     }
   }
   if (!result.date) {
-    const today = new Date().toISOString().slice(0, 10);
-    result.date = today;
+    const monthNameMatch = normalized.match(
+      /\b(\d{1,2})\s+(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\s+(\d{2,4})\b/i
+    );
+    if (monthNameMatch) {
+      const d = monthNameMatch[1].padStart(2, "0");
+      const mon = MONTH_NAME_TO_NUM[monthNameMatch[2].toLowerCase().slice(0, 3)];
+      if (mon) {
+        let y = monthNameMatch[3];
+        if (y.length === 2) y = `20${y}`;
+        result.date = `${y}-${mon}-${d}`;
+      }
+    }
   }
 
-  // Station name - often first non-empty line or contains "petrol"/"fuel"/"service"
-  const stationKeywords = /(?:petrol|fuel|service station|caltex|bp|shell|mobil|7-eleven|woolworths|coles)/i;
+  // Station name — keyword lines only (no arbitrary first-line fallback)
+  const stationKeywords =
+    /(?:petrol|fuel|service station|caltex|bp|shell|mobil|7[\s-]*eleven|ampol|speedway|budget|woolworths|coles)/i;
   for (const line of lines) {
     if (line.length > 2 && line.length < 80 && stationKeywords.test(line)) {
       result.station_name = line;
       break;
     }
   }
-  if (!result.station_name && lines.length > 0) {
-    const first = lines[0];
-    if (first.length > 2 && first.length < 60 && !/^\d+$/.test(first)) {
-      result.station_name = first;
-    }
-  }
 
   // Odometer - only when a label explicitly points to the reading.
-  // Dashboard OCR often returns trip meters (3-4 digits) or decimals (297.6 km); accept 4-7 digits or decimal.
   const odometerPatterns = [
-    /(?:odo(?:meter)?|mileage|kilomet(?:er|re)s?|km)\s*[:#\-\s]*([\d,]{4,7}(?:\.\d+)?)\b/i,
-    /\b([\d,]{4,7}(?:\.\d+)?)\s*(?:km|kilomet(?:er|re)s?|odo(?:meter)?|mileage)\b/i,
+    /(?:odo(?:meter)?|mileage|kilomet(?:er|re)s?|km)\s*[:#\-\s]*([\d,]{3,7}(?:\.\d+)?)\b/i,
+    /\b([\d,]{3,7}(?:\.\d+)?)\s*(?:km|kilomet(?:er|re)s?|odo(?:meter)?|mileage)\b/i,
   ];
   const odoCandidates: number[] = [];
   for (const pattern of odometerPatterns) {
@@ -153,7 +172,7 @@ export function parseOcrText(text: string): ExtractedFields {
     for (const m of matches) {
       const raw = m[1].replace(/,/g, "");
       const n = Math.floor(parseFloat(raw));
-      if (n >= 1000 && n <= 999999) odoCandidates.push(n);
+      if (n >= 100 && n <= 999999) odoCandidates.push(n);
     }
   }
   if (odoCandidates.length > 0) {
@@ -166,7 +185,39 @@ export function parseOcrText(text: string): ExtractedFields {
   );
   if (tripMatch) result.trip_meter = parseFloat(tripMatch[1]);
 
+  applyPlausibilityFilters(result);
   return result;
+}
+
+function applyPlausibilityFilters(result: ExtractedFields): void {
+  const { total_cost: t, litres: l, price_per_litre: p } = result;
+
+  if (t != null && (t <= 0 || t >= 500)) {
+    result.total_cost = undefined;
+  }
+  if (l != null && (l <= 0 || l >= 200)) {
+    result.litres = undefined;
+  }
+  if (p != null && (p <= 0.5 || p >= 5)) {
+    result.price_per_litre = undefined;
+  }
+
+  const tc = result.total_cost;
+  const lit = result.litres;
+  const ppl = result.price_per_litre;
+  if (
+    tc != null &&
+    lit != null &&
+    lit > 0 &&
+    ppl != null &&
+    ppl > 0
+  ) {
+    const expected = lit * ppl;
+    const rel = Math.abs(expected - tc) / tc;
+    if (rel > 0.2) {
+      result.price_per_litre = undefined;
+    }
+  }
 }
 
 function extractFuelType(text: string): FuelTypeOption | undefined {

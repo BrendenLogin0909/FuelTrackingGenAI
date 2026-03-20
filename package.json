@@ -9,14 +9,18 @@
     "lint": "next lint",
     "test": "jest --testPathIgnorePatterns=e2e",
     "test:ocr-training": "jest src/lib/ocr/__tests__/parser-training-ground.test.ts",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "test:ocr-images": "playwright test e2e/ocr-image-harness.spec.ts",
+    "test:ocr-benchmark": "playwright test e2e/ocr-benchmark-receipts.spec.ts e2e/ocr-benchmark-odometer.spec.ts",
+    "test:ocr-benchmark-receipts": "playwright test e2e/ocr-benchmark-receipts.spec.ts",
+    "test:ocr-benchmark-odometer": "playwright test e2e/ocr-benchmark-odometer.spec.ts"
   },
   "dependencies": {
     "dexie": "^4.0.1",
     "next": "14.2.15",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "tesseract.js": "^5.0.4"
+    "tesseract.js": "5.1.1"
   },
   "devDependencies": {
     "@playwright/test": "^1.48.0",

@@ -31,5 +31,15 @@ npm run test:ocr-training
 | File | Purpose |
 |------|---------|
 | `parser-cases.json` | Ground truth for parser + optional OCR variant B |
+| `critical-cases.json` | `parserCaseIdsOptional`: parser case IDs allowed to score &lt; 1 (warning only). `layerBCriticalImageIds`: doc only (Layer B uses `critical` on each row of `image-manifest.json`). |
+| `image-manifest.json` | Layer B: fixture filenames + expected fields + `critical` flag per image |
 | `evaluate.ts` | Scoring helpers (usable from scripts later) |
 | `types.ts` | Case typings |
+
+## Layer B (real OCR)
+
+```bash
+npm run test:ocr-images
+```
+
+Requires JPEG fixtures under `fixtures/images/` (often gitignored). Critical images must match expected fields; non-critical rows log warnings only.

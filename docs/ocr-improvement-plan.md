@@ -42,7 +42,7 @@
    - Tier 0: logging  
    - Tier 1: parser neutralization / hardening  
    - Tier 1b: Layer B image harness (before any retry or preprocess change)  
-   - Tier 2: retry framework (flagged off by default)  
+   - Tier 2: per-role pipeline + fallback retry (see `ocr-pipeline-production.ts`)  
    - Tier 3+: one preprocessing experiment per commit (flagged)
 
 ---
@@ -158,9 +158,9 @@ Key point: the transaction is **always submittable** — OCR is a convenience, n
 
 ---
 
-## Tier 2 — Retry framework (flagged)
+## Tier 2 — Retry framework (implemented)
 
-**Default**: single-pass identical to current baseline when flag off.
+**Production** (`extractFromImages`): each role runs a **tuned primary** pipeline, then a **different fallback** pipeline when `shouldRetryRole` fires (missing required fields, receipt plausibility, low confidence), bounded by `OCR_TOTAL_TIMEOUT_MS`. Pipelines are defined in `src/lib/ocr/ocr-pipeline-production.ts` (receipt: jpegHigh+PSM6+receipt post → baseline+PSM6+receipt; odometer: grayscaleContrastJpegHigh+PSM11 → baseline+PSM3).
 
 **Retry triggers** (configurable; add one per commit):
 
@@ -173,7 +173,7 @@ Key point: the transaction is **always submittable** — OCR is a convenience, n
 
 **Not in this tier**: auto-crop, rotation, threshold, sharpen.
 
-**Exit criteria**: flag off → zero extra passes; flag on → bounded per-role retries + timeouts respected; Layer A + Layer B green.
+**Exit criteria**: bounded per-role fallback + timeouts respected; Layer A + Layer B green.
 
 ---
 
@@ -200,6 +200,8 @@ Same gates as Tier 3. Candidates: resize policy, denoise, different JPEG quality
 ## Tier 5 — Baseline-B (encode / resize path)
 
 Separate flag from "retry preprocess." Experiments on the `compressImage` path itself: PNG to worker, different max dimension, different JPEG quality. Compare using Layer B; same critical-case no-regression rules.
+
+**Role-split tuning (local)**: `npm run test:ocr-benchmark-receipts` and `npm run test:ocr-benchmark-odometer` sweep different Tesseract PSM sets and post-OCR text modes per `image-manifest.json` role; matrices live in `src/lib/ocr/ocr-pipeline-presets.ts`. Production still uses a single path until a winning recipe is wired per role.
 
 ---
 

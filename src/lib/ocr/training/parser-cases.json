@@ -39,6 +39,12 @@
     "expected": { "date": "2024-01-15", "total_cost": 50 }
   },
   {
+    "id": "receipt-date-mmm-yyyy",
+    "role": "receipt",
+    "ocrText": "Budget Petrol\n03 APR 2022\nTotal 74.28",
+    "expected": { "date": "2022-04-03", "total_cost": 74.28, "station_name": "Budget Petrol" }
+  },
+  {
     "id": "receipt-ppl-from-total-litres",
     "role": "receipt",
     "ocrText": "Total 90.00\nLitres 45",

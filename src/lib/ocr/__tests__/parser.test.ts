@@ -31,10 +31,14 @@ describe("parseOcrText", () => {
     expect(r.date).toBe("2024-01-15");
   });
 
-  it("uses today when no date found", () => {
+  it("leaves date undefined when no date in OCR text", () => {
     const r = parseOcrText("Total 50.00");
-    expect(r.date).toBeDefined();
-    expect(r.date).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    expect(r.date).toBeUndefined();
+  });
+
+  it("parses DD MMM YYYY receipt dates", () => {
+    expect(parseOcrText("Sale 03 APR 2022\nTotal 10").date).toBe("2022-04-03");
+    expect(parseOcrText("Date 30 APR 22\nTotal 10").date).toBe("2022-04-30");
   });
 
   it("calculates price_per_litre from total and litres", () => {
